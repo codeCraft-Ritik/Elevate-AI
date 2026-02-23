@@ -1,14 +1,13 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // From Vercel ENV
+  baseURL: "https://elevate-ai-4.onrender.com/api", // ✅ YOUR RENDER BACKEND
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Global error handler
 API.interceptors.response.use(
   (response) => response,
   (error) => {
