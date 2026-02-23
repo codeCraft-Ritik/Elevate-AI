@@ -1,40 +1,39 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import dotenv from 'dotenv';
-import { config } from './config/index.js';
-import connectDB from './config/db.js';
-import { errorHandler } from './middleware/errorMiddleware.js';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
 
-// Import Routes
-import authRoutes from './routes/auth.js';
-import contentRoutes from './routes/content.js';
-import resumeRoutes from './routes/resume.js';
-import analyticsRoutes from './routes/analytics.js';
+import authRoutes from "./routes/auth.routes.js";
 
-dotenv.config(); 
-connectDB();
+dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Middleware
+app.use(express.json());
 
-app.use(helmet()); 
-app.use(cors({
-  origin: "http://localhost:5173", 
-  credentials: true
-}));
+// CORS (VERY IMPORTANT)
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://elevate-ai-amber.vercel.app", // your frontend domain
+];
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/content', contentRoutes);
-app.use('/api/resume', resumeRoutes);
-app.use('/api/analytics', analyticsRoutes);
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
-app.use(errorHandler);
+// Fix preflight CORS error
+app.options("*", cors());
 
-app.listen(config.port, () => {
-  console.log(`🚀 Server running in ${config.env} mode on port ${config.port}`);
-  console.log(`🔗 Shadow Simulation active at: http://localhost:${config.port}/api/shadow`);
+app.get("/", (req, res) => {
+  res.send("Elevate-AI Backend Running 🚀");
+});
+
+app.use("/api/auth", authRoutes);
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

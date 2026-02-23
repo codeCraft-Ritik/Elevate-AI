@@ -1,21 +1,18 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api', // Your Render Backend URL
+  baseURL: "https://elevate-ai-4.onrender.com/api", // ✅ NEW RENDER URL
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Global Response Error Handling (Best Practice)
+// Global error handler (production safe)
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error(
-      "API ERROR:",
-      error.response?.data || error.message
-    );
+    console.error("API ERROR:", error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
