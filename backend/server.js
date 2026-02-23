@@ -1,52 +1,40 @@
-const express = require('express');
-const cors = require('cors');
-const connectDB = require('./config/db');
-const { errorHandler } = require('./middleware/errorMiddleware');
-const authRoutes = require('./routes/auth');
-const resumeRoutes = require('./routes/resume');
-const contentRoutes = require('./routes/content');
-const analyticsRoutes = require('./routes/analytics');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
+import { config } from './config/index.js';
+import connectDB from './config/db.js';
+import { errorHandler } from './middleware/errorMiddleware.js';
+
+// Import Routes
+import authRoutes from './routes/auth.js';
+import contentRoutes from './routes/content.js';
+import resumeRoutes from './routes/resume.js';
+import analyticsRoutes from './routes/analytics.js';
+
+dotenv.config(); 
+connectDB();
 
 const app = express();
 
-// 1. CONNECT DATABASE
-connectDB();
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// 2. DYNAMIC CORS CONFIGURATION
-const allowedOrigins = [
-  "http://localhost:5173",                 // Local development
-  "https://elevate-ai-silk.vercel.app",    // Your Vercel Frontend (No slash)
-  "https://elevate-ai-silk.vercel.app/"     // Your Vercel Frontend (With slash)
-];
-
+app.use(helmet()); 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);
-    } else {
-      console.log("Blocked by CORS: ", origin);
-      return callback(new Error('Not allowed by CORS'), false);
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization"]
+  origin: "http://localhost:5173", 
+  credentials: true
 }));
 
-// 3. MIDDLEWARE
-app.use(express.json());
-
-// 4. ROUTES
-app.use('/api/auth', authRoutes); 
-app.use('/api/resume', resumeRoutes);
+// API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/resume', resumeRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// 5. ERROR HANDLER
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(config.port, () => {
+  console.log(`🚀 Server running in ${config.env} mode on port ${config.port}`);
+  console.log(`🔗 Shadow Simulation active at: http://localhost:${config.port}/api/shadow`);
+});
