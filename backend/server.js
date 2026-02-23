@@ -17,6 +17,31 @@ connectDB(); //
 
 const app = express();
 
+// === CRITICAL: Handle ALL preflight OPTIONS requests ===
+app.use((req, res, next) => {
+  const origin = req.get('origin');
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://elevate-ai-amber.vercel.app"
+  ];
+
+  if (allowedOrigins.includes(origin) || !origin) {
+    res.set('Access-Control-Allow-Origin', origin || '*');
+  }
+  
+  res.set('Access-Control-Allow-Credentials', 'true');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.set('Access-Control-Max-Age', '86400');
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // CORS MUST be applied BEFORE routes and other middleware
 const allowedOrigins = [
   "http://localhost:5173",
