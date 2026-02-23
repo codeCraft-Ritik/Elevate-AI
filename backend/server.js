@@ -9,29 +9,33 @@ const analyticsRoutes = require('./routes/analytics');
 
 const app = express();
 
-// CONNECT DATABASE
+// 1. CONNECT DATABASE
 connectDB();
 
-// MIDDLEWARE
-app.use(express.json());
-
-// UPDATED CORS LOGIC: Added your specific Render URL
+// 2. UPDATED CORS CONFIGURATION
+// This allows your specific Vercel frontend to communicate with this backend
 app.use(cors({
   origin: [
     "http://localhost:5173", 
-    "https://elevate-ai-2.onrender.com",
-    "https://elevate-ai-2.onrender.com/"
+    "https://elevate-ai-silk.vercel.app", 
+    "https://elevate-ai-silk.vercel.app/"
   ], 
-  credentials: true
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// ROUTES
-app.use('/api/auth', authRoutes);
+// 3. MIDDLEWARE
+app.use(express.json());
+
+// 4. ROUTES
+// All auth routes will be prefixed with /api/auth (e.g., /api/auth/login)
+app.use('/api/auth', authRoutes); 
 app.use('/api/resume', resumeRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// ERROR HANDLER
+// 5. ERROR HANDLER
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
