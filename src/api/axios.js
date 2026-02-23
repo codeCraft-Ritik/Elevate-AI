@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 const API = axios.create({
-  // VITE_API_URL should be set to https://elevate-ai-3.onrender.com/api in your Vercel settings
   baseURL: import.meta.env.VITE_API_URL || 'https://elevate-ai-3.onrender.com/api',
+  timeout: 10000,
+  withCredentials: true  // Important for sending cookies
 });
 
 API.interceptors.request.use((config) => {
@@ -12,5 +13,17 @@ API.interceptors.request.use((config) => {
   }
   return config;
 });
+
+API.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized - clear token and redirect
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default API;

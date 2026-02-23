@@ -17,29 +17,32 @@ connectDB(); //
 
 const app = express();
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(helmet()); 
-
-// UPDATED: DYNAMIC CORS LOGIC
+// CORS MUST be applied BEFORE routes and other middleware
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://elevate-ai-amber.vercel.app",   // YOUR NEW VERCEL URL (No slash)
-  "https://elevate-ai-amber.vercel.app/"   // YOUR NEW VERCEL URL (With slash)
+  "http://localhost:3000",
+  "https://elevate-ai-amber.vercel.app"
 ];
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
+  origin: function(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Blocked by Neural Security: CORS Policy Violation'));
+      callback(new Error('CORS blocked'));
     }
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200,
+  maxAge: 86400
+}));
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoding({ limit: '50mb', extended: true }));
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // API Routes
