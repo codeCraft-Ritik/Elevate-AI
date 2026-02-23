@@ -1,40 +1,56 @@
-const express = require('express');
-const cors = require('cors');
-const connectDB = require('./config/db');
-const { errorHandler } = require('./middleware/errorMiddleware');
-const authRoutes = require('./routes/auth');
-const resumeRoutes = require('./routes/resume');
-const contentRoutes = require('./routes/content');
-const analyticsRoutes = require('./routes/analytics');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
+import { config } from './config/index.js';
+import connectDB from './config/db.js';
+import { errorHandler } from './middleware/errorMiddleware.js';
+
+// Import Routes
+import authRoutes from './routes/auth.js';
+import contentRoutes from './routes/content.js';
+import resumeRoutes from './routes/resume.js';
+import analyticsRoutes from './routes/analytics.js';
+
+dotenv.config(); 
+connectDB(); //
 
 const app = express();
 
-// CONNECT DATABASE
-connectDB();
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(helmet()); 
 
-// MIDDLEWARE
-app.use(express.json());
+// UPDATED: DYNAMIC CORS LOGIC
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://elevate-ai-amber.vercel.app",   // YOUR NEW VERCEL URL (No slash)
+  "https://elevate-ai-amber.vercel.app/"   // YOUR NEW VERCEL URL (With slash)
+];
 
-// UPDATED CORS LOGIC: Replace with your actual Vercel URL
 app.use(cors({
-  origin: [
-    "http://localhost:5173", 
-    "https://elevate-ai-silk.vercel.app",
-    "https://elevate-ai-silk.vercel.app/"
-  ], 
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by Neural Security: CORS Policy Violation'));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// ROUTES
+// API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/resume', resumeRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/resume', resumeRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// ERROR HANDLER
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(config.port, () => {
+  console.log(`🚀 Server running in ${config.env} mode on port ${config.port}`);
+  console.log(`🔗 Shadow Simulation active at: http://localhost:${config.port}/api/shadow`);
+});
