@@ -1,14 +1,14 @@
-// src/api/axios.js
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  // VITE_API_URL should be set to https://elevate-ai-3.onrender.com/api in your Vercel settings
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
 });
 
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token'); // This must match the key used in Login.jsx
+  const token = localStorage.getItem('token'); 
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`; // Must include 'Bearer ' prefix
+    config.headers.Authorization = `Bearer ${token}`; 
   }
   return config;
 });
