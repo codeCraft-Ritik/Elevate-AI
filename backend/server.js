@@ -12,14 +12,25 @@ const app = express();
 // 1. CONNECT DATABASE
 connectDB();
 
-// 2. UPDATED CORS CONFIGURATION
-// This allows your specific Vercel frontend to communicate with this backend
+// 2. DYNAMIC CORS CONFIGURATION
+const allowedOrigins = [
+  "http://localhost:5173",                 // Local development
+  "https://elevate-ai-silk.vercel.app",    // Your Vercel Frontend (No slash)
+  "https://elevate-ai-silk.vercel.app/"     // Your Vercel Frontend (With slash)
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173", 
-    "https://elevate-ai-silk.vercel.app",
-    "https://elevate-ai-silk.vercel.app/"
-  ], 
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    } else {
+      console.log("Blocked by CORS: ", origin);
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -29,7 +40,6 @@ app.use(cors({
 app.use(express.json());
 
 // 4. ROUTES
-// All auth routes will be prefixed with /api/auth (e.g., /api/auth/login)
 app.use('/api/auth', authRoutes); 
 app.use('/api/resume', resumeRoutes);
 app.use('/api/content', contentRoutes);
