@@ -17,7 +17,7 @@ connectDB();
 app.use(cors({
   origin: [
     "http://localhost:5173", 
-    "https://elevate-ai-silk.vercel.app", 
+    "https://elevate-ai-silk.vercel.app",
     "https://elevate-ai-silk.vercel.app/"
   ], 
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
