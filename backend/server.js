@@ -1,53 +1,40 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import authRoutes from "./routes/auth.routes.js";
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
+import { config } from './config/index.js';
+import connectDB from './config/db.js';
+import { errorHandler } from './middleware/errorMiddleware.js';
 
-dotenv.config();
+// Import Routes
+import authRoutes from './routes/auth.js';
+import contentRoutes from './routes/content.js';
+import resumeRoutes from './routes/resume.js';
+import analyticsRoutes from './routes/analytics.js';
+
+dotenv.config(); 
+connectDB();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// ================= MIDDLEWARE =================
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ================= FINAL CORS FIX (PRODUCTION READY) =================
-const allowedOrigins = [
-  "http://localhost:5173", // Local dev
-  "http://localhost:3000",
-  "https://elevate-ai-brown.vercel.app", // 🔥 YOUR ACTUAL FRONTEND (IMPORTANT)
-];
+app.use(helmet()); 
+app.use(cors({
+  origin: "http://localhost:5173", 
+  credentials: true
+}));
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, mobile apps)
-      if (!origin) return callback(null, true);
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/content', contentRoutes);
+app.use('/api/resume', resumeRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("CORS Not Allowed: " + origin));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(errorHandler);
 
-// VERY IMPORTANT: Fix Preflight Requests (Your exact error)
-app.options("*", cors());
-
-// ================= TEST ROUTE =================
-app.get("/", (req, res) => {
-  res.send("Elevate-AI Backend Running 🚀");
-});
-
-// ================= API ROUTES =================
-app.use("/api/auth", authRoutes);
-
-// ================= SERVER =================
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(config.port, () => {
+  console.log(`🚀 Server running in ${config.env} mode on port ${config.port}`);
+  console.log(`🔗 Shadow Simulation active at: http://localhost:${config.port}/api/shadow`);
 });
